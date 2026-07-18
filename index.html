@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Climate Adaptation Finance Flows Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+:root {
+  --bg-deep: #0a0e17;
+  --bg-panel: #111827;
+  --bg-card: #1a2332;
+  --bg-card-hover: #1f2b3d;
+  --border-subtle: #1e2d3d;
+  --border-active: #22d3ee;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --accent-teal: #22d3ee;
+  --accent-green: #34d399;
+  --accent-amber: #fbbf24;
+  --accent-red: #f87171;
+  --accent-blue: #60a5fa;
+  --accent-purple: #a78bfa;
+  --accent-pink: #f472b6;
+  --gradient-teal: linear-gradient(135deg, #22d3ee, #06b6d4);
+  --gradient-green: linear-gradient(135deg, #34d399, #10b981);
+  --gradient-amber: linear-gradient(135deg, #fbbf24, #f59e0b);
+  --gradient-red: linear-gradient(135deg, #f87171, #ef4444);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-card: 0 4px 24px rgba(0,0,0,0.3);
+  --font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  display: flex; flex-direction: column;
+}
+
+/* === FIXED HEADER === */
+.header {
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  flex-shrink: 0;
+  z-index: 100;
+}
+.header-left {
+  display: flex; align-items: center; gap: 14px;
+}
+.header-logo {
+  width: 36px; height: 36px;
+  background: var(--gradient-teal);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.header-title { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+.header-title span { color: var(--accent-teal); }
+.header-right { display: flex; align-items: center; gap: 16px; }
+.header-badge {
+  font-size: 11px; padding: 4px 10px; border-radius: 20px;
+  background: rgba(34,211,238,0.12); color: var(--accent-teal);
+  border: 1px solid rgba(34,211,238,0.2);
+}
+
+/* === TABS === */
+.tabs-bar {
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex; gap: 0;
+  padding: 0 24px;
+  flex-shrink: 0;
+  height: 48px;
+  overflow-x: auto;
+}
+.tab-btn {
+  background: none; border: none; color: var(--text-muted);
+  padding: 0 20px; height: 48px;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  font-family: var(--font-sans);
+  position: relative;
+}
+.tab-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.03); }
+.tab-btn.active { color: var(--accent-teal); border-bottom-color: var(--accent-teal); }
+.tab-btn .tab-icon { margin-right: 7px; font-size: 14px; }
+
+/* === MAIN CONTENT === */
+.main-content {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  padding: 20px 24px;
+  scroll-behavior: smooth;
+}
+.main-content::-webkit-scrollbar { width: 6px; }
+.main-content::-webkit-scrollbar-track { background: transparent; }
+.main-content::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 3px; }
+
+/* === TAB PANELS === */
+.tab-panel { display: none; animation: fadeSlideIn 0.35s ease; }
+.tab-panel.active { display: block; }
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* === KPI CARDS === */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.kpi-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 20px 22px;
+  transition: all 0.25s;
+  position: relative; overflow: hidden;
+}
+.kpi-card:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(34,211,238,0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.kpi-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; width: 3px; height: 100%;
+  border-radius: 3px 0 0 3px;
+}
+.kpi-card.accent-teal::before { background: var(--accent-teal); }
+.kpi-card.accent-green::before { background: var(--accent-green); }
+.kpi-card.accent-amber::before { background: var(--accent-amber); }
+.kpi-card.accent-red::before { background: var(--accent-red); }
+.kpi-card.accent-blue::before { background: var(--accent-blue); }
+.kpi-card.accent-purple::before { background: var(--accent-purple); }
+.kpi-label {
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px;
+  color: var(--text-muted); margin-bottom: 6px; font-weight: 600;
+}
+.kpi-value {
+  font-size: 32px; font-weight: 800; letter-spacing: -1px;
+  font-family: var(--font-mono);
+  margin-bottom: 4px; line-height: 1.1;
+}
+.kpi-sub {
+  font-size: 12px; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 6px;
+}
+.kpi-change { font-weight: 600; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+.kpi-change.up { color: var(--accent-green); background: rgba(52,211,153,0.12); }
+.kpi-change.down { color: var(--accent-red); background: rgba(248,113,113,0.12); }
+
+/* === CHART ROWS === */
+.chart-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.chart-row.three-col { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+.chart-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 20px 22px;
+  transition: all 0.25s;
+}
+.chart-panel:hover { border-color: rgba(34,211,238,0.15); }
+.chart-panel.full-width { grid-column: 1 / -1; }
+.chart-panel-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 16px;
+}
+.chart-panel-title {
+  font-size: 14px; font-weight: 600; color: var(--text-primary);
+}
+.chart-panel-badge {
+  font-size: 11px; padding: 3px 10px; border-radius: 12px;
+  background: rgba(34,211,238,0.1); color: var(--accent-teal);
+}
+.chart-wrap { position: relative; width: 100%; }
+.chart-wrap canvas { width: 100% !important; }
+
+/* === SANKEY CONTAINER === */
+.sankey-container { width: 100%; min-height: 420px; position: relative; }
+.sankey-container svg { width: 100%; height: 100%; }
+
+/* === DATA TABLE === */
+.data-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 20px 22px;
+  overflow-x: auto;
+}
+.data-section h3 { font-size: 14px; font-weight: 600; margin-bottom: 14px; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.data-table thead th {
+  text-align: left; padding: 10px 12px;
+  border-bottom: 2px solid var(--border-subtle);
+  color: var(--text-muted); font-weight: 600; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  cursor: pointer; user-select: none; white-space: nowrap;
+}
+.data-table thead th:hover { color: var(--accent-teal); }
+.data-table thead th .sort-arrow { margin-left: 4px; font-size: 10px; }
+.data-table tbody td {
+  padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.data-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+.data-table .bar-cell {
+  display: flex; align-items: center; gap: 8px;
+}
+.data-table .mini-bar {
+  height: 6px; border-radius: 3px; background: var(--accent-teal);
+  min-width: 2px;
+}
+
+/* === FILTER CONTROLS === */
+.filter-bar {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 16px; align-items: center;
+}
+.filter-btn {
+  padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border-subtle);
+  background: var(--bg-card); color: var(--text-secondary);
+  font-size: 12px; cursor: pointer; transition: all 0.2s;
+  font-family: var(--font-sans);
+}
+.filter-btn:hover { border-color: rgba(34,211,238,0.3); color: var(--text-primary); }
+.filter-btn.active {
+  background: rgba(34,211,238,0.12); border-color: var(--accent-teal);
+  color: var(--accent-teal); font-weight: 600;
+}
+
+/* === NEED INDICATOR === */
+.need-meter {
+  display: flex; align-items: center; gap: 8px; margin-top: 8px;
+}
+.need-meter-bar {
+  flex: 1; height: 6px; background: var(--border-subtle);
+  border-radius: 3px; overflow: hidden;
+}
+.need-meter-fill {
+  height: 100%; border-radius: 3px; transition: width 1s ease;
+}
+.need-meter-fill.low { background: var(--accent-red); }
+.need-meter-fill.mid { background: var(--accent-amber); }
+.need-meter-fill.high { background: var(--accent-green); }
+.need-meter-label { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+
+/* === FOOTER === */
+.footer {
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border-subtle);
+  padding: 10px 24px;
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 11px; color: var(--text-muted);
+  flex-shrink: 0; height: 40px;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 900px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .chart-row { grid-template-columns: 1fr; }
+  .kpi-value { font-size: 24px; }
+  .tab-btn { padding: 0 12px; font-size: 11px; }
+}
+@media (max-width: 500px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+  .header { padding: 0 12px; }
+  .tabs-bar { padding: 0 8px; }
+}
+</style>
+</head>
+<body>
+
+<!-- === HEADER === -->
+<header class="header">
+  <div class="header-left">
+    <div class="header-logo">🌐</div>
+    <div class="header-title">Climate <span>Adaptation</span> Finance Flows</div>
+  </div>
+  <div class="header-right">
+    <div class="header-badge">📊 Data: CPI · OECD · UNFCCC · CBI · 2025</div>
+  </div>
+</header>
+
+<!-- === TABS === -->
+<nav class="tabs-bar" id="tabsBar">
+  <button class="tab-btn active" data-tab="overview"><span class="tab-icon">📋</span>Overview</button>
+  <button class="tab-btn" data-tab="green-bonds"><span class="tab-icon">🌿</span>Green Bonds</button>
+  <button class="tab-btn" data-tab="adaptation"><span class="tab-icon">🏗️</span>Adaptation Finance</button>
+  <button class="tab-btn" data-tab="loss-damage"><span class="tab-icon">⚠️</span>Loss & Damage</button>
+  <button class="tab-btn" data-tab="finance-gap"><span class="tab-icon">📉</span>Finance Gap</button>
+  <button class="tab-btn" data-tab="explorer"><span class="tab-icon">🔍</span>Data Explorer</button>
+</nav>
+
+<!-- === MAIN CONTENT === -->
+<main class="main-content" id="mainContent">
+
+<!-- ========== TAB 1: OVERVIEW ========== -->
+<section class="tab-panel active" id="panel-overview">
+
+  <!-- KPI Row -->
+  <div class="kpi-grid">
+    <div class="kpi-card accent-teal">
+      <div class="kpi-label">Total Climate Finance (2023)</div>
+      <div class="kpi-value" id="kpi-total">$1.27T</div>
+      <div class="kpi-sub"><span class="kpi-change up">▲ 8.2%</span> vs 2022</div>
+    </div>
+    <div class="kpi-card accent-green">
+      <div class="kpi-label">Adaptation Finance (2023)</div>
+      <div class="kpi-value" id="kpi-adapt">$63B</div>
+      <div class="kpi-sub"><span class="kpi-change up">▲ 12.5%</span> vs 2022</div>
+    </div>
+    <div class="kpi-card accent-amber">
+      <div class="kpi-label">Annual Adaptation Need by 2030</div>
+      <div class="kpi-value" id="kpi-need">$315B</div>
+      <div class="kpi-sub">UNEP Adaptation Gap Report</div>
+    </div>
+    <div class="kpi-card accent-red">
+      <div class="kpi-label">Adaptation Finance Gap</div>
+      <div class="kpi-value" id="kpi-gap">$252B</div>
+      <div class="kpi-sub"><span class="kpi-change down">5.0× current flows</span></div>
+    </div>
+    <div class="kpi-card accent-purple">
+      <div class="kpi-label">Loss & Damage Pledges</div>
+      <div class="kpi-value" id="kpi-ld">$792M</div>
+      <div class="kpi-sub">vs. $400B/yr estimated need</div>
+    </div>
+  </div>
+
+  <!-- Top charts row -->
+  <div class="chart-row">
+    <div class="chart-panel full-width">
+      <div class="chart-panel-header">
+        <div class="chart-panel-title">🌊 Climate Finance Flow Sankey — From Source to Destination (2023, USD Billions)</div>
+        <div class="chart-panel-badge">Interactive</div>
+      </div>
+      <div class="sankey-container" id="sankeyOverview"></div>
+    </div>
+  </div>
+
+  <!-- Secondary charts -->
+  <div class="chart-row">
+    <div class="chart-panel">
+      <div class="chart-panel-header">
+        <div class="chart-panel-title">📈 Climate Finance Composition Trend (2015–2023)</div>
+      </div>
+      <div class="chart-wrap"><canvas id="chartComposition"></canvas></div>
+    </div>
+    <div class="chart-panel">
+      <div class="chart-panel-header">
+        <div class="chart-panel-title">🎯 Adaptation Share of Total Climate Finance</div>
+      </div>
+      <div class="chart-wrap"><canvas id="chartAdaptShare"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== TAB 2: GREEN BONDS ========== -->
+<section class="tab-panel" id="panel-green-bonds">
+
+  <div class="kpi-grid">
+    <div class="kpi-card accent-teal">
+      <div class="kpi-label">Cumulative Green Bond Issuance</div>
+      <div class="kpi-value">$2.9T</div>
+      <div class="kpi-sub">Climate Bonds Initiative · Through Q1 2025</div>
+    </div>
+    <div class="kpi-card accent-green">
+      <div class="kpi-label">2024 Green Bond Issuance</div>
+      <div class="kpi-value">$618B</div>
+      <div class="kpi-sub"><span class="kpi-change up">▲ 14.2%</span> vs 2023</div>
+    </div>
+    <div class="kpi-card accent-blue">
+      <div class="kpi-label">Adaptation-Labeled Bonds</div>
+      <div class="kpi-value">$53B</div>
+      <div class="kpi-sub">8.6% of total green bond market</div>
+    </div>
+    <div class="kpi-card accent-amber">
+      <div class="kpi-label">Largest Issuer Region</div>
+      <div class="kpi-value">Europe</div>
+      <div class="kpi-sub">48% of global issuance in 2024</div>
+    </div>
+  </div>
+
+  <div class="chart-row">
+    <div class="chart-panel full-width">
+      <div class="chart-panel-header">
+        <div class="chart-panel-title">📈 Annual Green Bond Issuance by Region (2015–2024, USD Billions)</div>
+        <div class="chart-panel-badge">Stacked Bar</div>
+      </div>
+      <div class="chart-wrap"><canvas id="chartGreenBonds"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-row">
+    <div class="chart-panel">
+      <div class="chart-panel-header">
+        <div class="chart-panel-title">🍩 Green Bond Use-of-Proceeds by Sector (2024)</div>
+      </div>
+      <div class="chart-wrap"><canvas id="chartGBSectors"></canvas></div>
+    </div>
+    <div class="chart-panel">
+      <div class="chart-panel-header">
+        <div class="chart-panel-title">🏦 Top 10 Green Bond Issuing Countries (2024)</div>
+      </div>
+      <div class="chart-wrap"><canvas id="chartGBCountries"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== TAB 3: ADAPTATION FINANCE ========== -->
+<section class="tab-panel" id="panel-adaptation">
+
+  <div class="kpi-grid">
+    <div class="kpi-card accent-teal">
+      <div class="kpi-label">Public Adaptation Finance</div>
+      <div class="kpi-value">$39.8B</div>
+      <div class="kpi-sub">63% of total adaptation finance</div>
+    </div>
+    <div class="kpi-card accent-blue">
+      <div class="kpi-label">Private Adaptation Finance</div>
+      <div class="kpi-value">$23.2B</div>
+      <div class="kpi-sub">37% of total — growing slowly</div>
+    </div>
+    <div class="kpi-card accent-green">
+      <div class="kpi-label">Water & Flood Management</div>
+      <div class="kpi-value">$12.1B</div>
+      <div class="kpi-sub">Largest adaptation sub-sector</div>
+    </div>
+    <div class="kpi-card accent-red">
+      <div class="kpi-label">Africa's Adaptation Share</div>
+      <div class="kpi-value">5.8%</div>
+      <div class="kpi-sub">Disproportionately low vs. vulnerability</div>
+    </div>
+  </div>
+
+  <div class="chart-row">
+    <div class="chart-panel">
+      <div class="chart-panel-header">
+        <div class="chart-panel-title">🏗️ Adaptation Finance by Sector (2023, USD Billions)</div>
+      </div>
+      <div class="chart-wrap"><canvas id="chartAdaptSectors"></canvas></div>
+    </div>
+    <div class="chart-panel">
+      <div class="chart-panel-header">
+        <div class="chart-panel-title">🏛️ Adaptation Finance by Instrument Type</div>
+      </div>
+      <div class="chart-wrap"><canvas id="chartAdaptInstruments"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-row">
+    <div class="chart-panel full-width">
+      <div class="chart-panel-header">
+        <div class="chart-panel-title">🌍 Adaptation Finance Flows by Recipient Region (2018–2023, USD Billions)</div>
+      </div>
+      <div class="chart-wrap"><canvas id="chartAdaptRegion"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== TAB 4: LOSS & DAMAGE ========== -->
+<section class="tab-panel" id="panel-loss-damage">
+
+  <div class="kpi-grid">
+    <div class="kpi-card accent-red">
+      <div class="kpi-label">Loss & Damage Fund Pledges (Total)</div>
+      <div class="kpi-value">$792M</div>
+      <div class="kpi-sub">COP28 + subsequent pledges</div>
+    </div>
+    <div class="kpi-card accent-amber">
+      <div class="kpi-label">Actually Disbursed</div>
+      <div class="kpi-value">$98M</div>
+      <div class="kpi-sub">12.4% of pledges — as of Q1 2025</div>
+    </div>
+    <div class="kpi-card accent-red">
+      <div class="kpi-label">Estimated Annual Needs by 2030</div>
+      <div class="kpi-value">$400B</div>
+      <div class="kpi-sub">~0.2% of need currently pledged</div>
+    </div>
+    <div class="kpi-card accent-purple">
+      <div class="kpi-label">Economic Losses from Climate Disasters (2023)</div>
+      <div class="kpi-value">$380B</div>
+      <div class="kpi-sub">Only 38% insured globally</div>
+    </div>
+  </div>
+
+  <div class="chart-row">
+    <div class="chart-panel full-width">
+      <div class="chart-panel-header">
+        <div class="chart-panel-title">⚠️ Loss & Damage — Pledges vs. Disbursements vs. Estimated Need</div>
+        <div class="chart-panel-badge">Gap Analysis</div>
+      </div>
+      <div class="chart-wrap"><canvas id="chartLDGap"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-row">
+    <div class="chart-panel">
+      <div class="chart-panel-header">
+        <div class="chart-panel-title">🏴 Loss & Damage Fund Pledges by Country (USD Millions)</div>
+      </div>
+      <div class="chart-wrap"><canvas id="chartLDPledges"></canvas></div>
+    </div>
+    <div class="chart-panel">
+      <div class="chart-panel-header">
+        <div class="chart-panel-title">🌪️ Climate Disaster Costs vs. L&D Funding by Region (2023)</div>
+      </div>
+      <div class="chart-wrap"><canvas id="chartLDRegional"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== TAB 5: FINANCE GAP ========== -->
+<section class="tab-panel" id="panel-finance-gap">
+
+  <div class="kpi-grid">
+    <div class="kpi-card accent-red">
+      <div class="kpi-label">Annual Adaptation Finance Gap</div>
+      <div class="kpi-value">$252B</div>
+      <div class="kpi-sub">Needs ($315B) − Current flows ($63B)</div>
+    </div>
+    <div class="kpi-card accent-amber">
+      <div class="kpi-label">Gap as % of Current Flows</div>
+      <div class="kpi-value">400%</div>
+      <div class="kpi-sub">Needs are 5× current investment</div>
+    </div>
+    <div class="kpi-card accent-teal">
+      <div class="kpi-label">Largest Gap Region</div>
+      <div class="kpi-value">Sub-Saharan Africa</div>
+      <div class="kpi-sub">Receives only 5.8% of adaptation flows</div>
+    </div>
+    <div class="kpi-card accent-purple">
+      <div class="kpi-label">Projected 2050 Annual Need</div>
+      <div class="kpi-value">$565B</div>
+      <div class="kpi-sub">Under 2°C warming scenario</div>
+    </div>
+  </div>
+
+  <div class="chart-row">
+    <div class="chart-panel full-width">
+      <div class="chart-panel-header">
+        <div class="chart-panel-title">📉 The Adaptation Finance Gap — Needs vs. Actual Flows (2020–2050 Projected)</div>
+      </div>
+      <div class="chart-wrap"><canvas id="chartGapProjection"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-row">
+    <div class="chart-panel">
+      <div class="chart-panel-header">
+        <div class="chart-panel-title">🌍 Adaptation Finance Gap by Region (Needs vs. Flows)</div>
+      </div>
+      <div class="chart-wrap"><canvas id="chartGapRegion"></canvas></div>
+    </div>
+    <div class="chart-panel">
+      <div class="chart-panel-header">
+        <div class="chart-panel-title">🎯 Funding Adequacy Ratio by Region (% of needs met)</div>
+      </div>
+      <div class="chart-wrap"><canvas id="chartAdequacy"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== TAB 6: DATA EXPLORER ========== -->
+<section class="tab-panel" id="panel-explorer">
+  <div class="data-section">
+    <h3>📊 Climate Adaptation Finance — Full Dataset Explorer</h3>
+    <div class="filter-bar" id="explorerFilters">
+      <button class="filter-btn active" data-filter="all">All Data</button>
+      <button class="filter-btn" data-filter="Green Bonds">Green Bonds</button>
+      <button class="filter-btn" data-filter="Adaptation">Adaptation Finance</button>
+      <button class="filter-btn" data-filter="Loss & Damage">Loss & Damage</button>
+      <button class="filter-btn" data-filter="Finance Gap">Finance Gap</button>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="data-table" id="explorerTable">
+        <thead>
+          <tr>
+            <th data-sort="category">Category <span class="sort-arrow">↕</span></th>
+            <th data-sort="indicator">Indicator <span class="sort-arrow">↕</span></th>
+            <th data-sort="region">Region <span class="sort-arrow">↕</span></th>
+            <th data-sort="year">Year <span class="sort-arrow">↕</span></th>
+            <th data-sort="value">Value (USD B) <span class="sort-arrow">↕</span></th>
+            <th data-sort="source">Source <span class="sort-arrow">↕</span></th>
+          </tr>
+        </thead>
+        <tbody id="explorerBody"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:12px;font-size:12px;color:var(--text-muted);" id="rowCount"></div>
+  </div>
+</section>
+
+</main>
+
+<!-- === FOOTER === -->
+<footer class="footer">
+  <span>Sources: Climate Policy Initiative · OECD · UNFCCC Standing Committee on Finance · Climate Bonds Initiative · UNEP Adaptation Gap Report 2024</span>
+  <span>H Heuristics © 2025</span>
+</footer>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+
+// --- Composition trend data ---
+const compositionData = [
+  { year: 2015, mitigation: 388, adaptation: 20, dual: 14 },
+  { year: 2016, mitigation: 410, adaptation: 22, dual: 18 },
+  { year: 2017, mitigation: 455, adaptation: 25, dual: 19 },
+  { year: 2018, mitigation: 537, adaptation: 30, dual: 22 },
+  { year: 2019, mitigation: 577, adaptation: 35, dual: 28 },
+  { year: 2020, mitigation: 598, adaptation: 46, dual: 31 },
+  { year: 2021, mitigation: 694, adaptation: 49, dual: 39 },
+  { year: 2022, mitigation: 1065, adaptation: 56, dual: 52 },
+  { year: 2023, mitigation: 1085, adaptation: 63, dual: 58 },
+];
+
+// --- Green bonds by region ---
+const gbRegions = ['Europe', 'Asia-Pacific', 'North America', 'Latin America', 'Africa', 'Middle East'];
+const gbYears = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024];
+const gbData = {
+  'Europe': [28, 32, 55, 62, 108, 125, 184, 198, 241, 297],
+  'Asia-Pacific': [14, 28, 42, 52, 66, 72, 127, 186, 209, 227],
+  'North America': [8, 11, 22, 35, 52, 62, 88, 74, 62, 68],
+  'Latin America': [2, 3, 6, 5, 8, 7, 12, 11, 14, 16],
+  'Africa': [0.3, 0.5, 1.2, 1.5, 2.1, 1.8, 3.2, 3.5, 4.8, 5.5],
+  'Middle East': [0.2, 0.4, 0.8, 1.2, 2.5, 1.5, 2.8, 3.2, 3.8, 4.5],
+};
+
+// --- Green bond sectors ---
+const gbSectors = {
+  'Energy': 189, 'Buildings': 112, 'Transport': 98,
+  'Water': 56, 'Land Use': 42, 'Waste': 35,
+  'Adaptation': 53, 'Industry': 33,
+};
+
+// --- Top green bond countries ---
+const gbCountries = {
+  'China': 126, 'Germany': 78, 'USA': 62, 'France': 55,
+  'Netherlands': 32, 'UK': 28, 'Japan': 24, 'Sweden': 20,
+  'Spain': 18, 'Italy': 16,
+};
+
+// --- Adaptation sectors ---
+const adaptSectors = {
+  'Water & Flood Mgmt': 12.1, 'Agriculture & Food': 9.8,
+  'Infrastructure': 8.4, 'Disaster Preparedness': 7.2,
+  'Coastal Protection': 5.6, 'Health Systems': 4.9,
+  'Ecosystem Services': 4.1, 'Climate Info Services': 3.2,
+  'Social Protection': 2.8, 'Other': 4.9,
+};
+
+// --- Adaptation instruments ---
+const adaptInstruments = { 'Grants': 15.8, 'Concessional Loans': 22.4, 'Market-Rate Loans': 12.6, 'Equity': 4.8, 'Guarantees': 2.4, 'Other': 5.0 };
+
+// --- Adaptation by region ---
+const adaptRegions = ['Sub-Saharan Africa', 'South Asia', 'East Asia & Pacific', 'Latin America & Caribbean', 'Middle East & North Africa', 'Europe & Central Asia'];
+const adaptYears = [2018, 2019, 2020, 2021, 2022, 2023];
+const adaptRegionData = {
+  'Sub-Saharan Africa': [2.1, 2.5, 3.0, 3.2, 3.5, 3.7],
+  'South Asia': [3.4, 3.8, 5.2, 5.8, 6.3, 7.1],
+  'East Asia & Pacific': [7.8, 8.5, 12.3, 14.2, 16.8, 18.4],
+  'Latin America & Caribbean': [3.8, 4.2, 5.5, 6.1, 6.9, 7.8],
+  'Middle East & North Africa': [1.8, 2.0, 2.8, 3.1, 3.4, 3.9],
+  'Europe & Central Asia': [8.2, 9.5, 13.8, 15.2, 17.8, 20.1],
+};
+
+// --- Loss & Damage pledges ---
+const ldPledges = {
+  'EU/Germany': 245, 'France': 128, 'Italy': 118, 'UAE': 100,
+  'UK': 68, 'USA': 24, 'Japan': 18, 'Norway': 25,
+  'Denmark': 18, 'Ireland': 15, 'Canada': 12, 'Netherlands': 12, 'Other': 9,
+};
+
+// --- Loss & Damage regional ---
+const ldRegional = [
+  { region: 'South Asia', cost: 78, pledged: 0.08 },
+  { region: 'Sub-Saharan Africa', cost: 45, pledged: 0.10 },
+  { region: 'East Asia & Pacific', cost: 112, pledged: 0.12 },
+  { region: 'LAC', cost: 58, pledged: 0.09 },
+  { region: 'MENA', cost: 32, pledged: 0.07 },
+  { region: 'Europe', cost: 55, pledged: 0.46 },
+];
+
+// --- Gap projections ---
+const gapProjections = [
+  { year: 2020, need: 120, actual: 46 },
+  { year: 2022, need: 180, actual: 56 },
+  { year: 2024, need: 260, actual: 65 },
+  { year: 2026, need: 310, actual: 78 },
+  { year: 2028, need: 365, actual: 92 },
+  { year: 2030, need: 430, actual: 108 },
+  { year: 2035, need: 480, actual: 145 },
+  { year: 2040, need: 520, actual: 175 },
+  { year: 2045, need: 545, actual: 195 },
+  { year: 2050, need: 565, actual: 215 },
+];
+
+// --- Gap by region ---
+const gapRegionData = [
+  { region: 'SSA', need: 68, flow: 3.7 },
+  { region: 'South Asia', need: 85, flow: 7.1 },
+  { region: 'EAP', need: 72, flow: 18.4 },
+  { region: 'LAC', need: 38, flow: 7.8 },
+  { region: 'MENA', need: 24, flow: 3.9 },
+  { region: 'Europe & CA', need: 28, flow: 20.1 },
+  { region: 'Small Islands', need: 18, flow: 1.2 },
+];
+
+// --- Explorer data ---
+const explorerData = [
+  { category:'Green Bonds',indicator:'Total Green Bond Issuance',region:'Global',year:2024,value:618,source:'Climate Bonds Initiative'},
+  { category:'Green Bonds',indicator:'Cumulative Green Bonds',region:'Global',year:2024,value:2900,source:'Climate Bonds Initiative'},
+  { category:'Green Bonds',indicator:'Green Bond Issuance',region:'Europe',year:2024,value:297,source:'Climate Bonds Initiative'},
+  { category:'Green Bonds',indicator:'Green Bond Issuance',region:'Asia-Pacific',year:2024,value:227,source:'Climate Bonds Initiative'},
+  { category:'Green Bonds',indicator:'Green Bond Issuance',region:'North America',year:2024,value:68,source:'Climate Bonds Initiative'},
+  { category:'Green Bonds',indicator:'Green Bond Issuance',region:'Africa',year:2024,value:5.5,source:'Climate Bonds Initiative'},
+  { category:'Green Bonds',indicator:'Adaptation-Labeled Bonds',region:'Global',year:2024,value:53,source:'Climate Bonds Initiative'},
+  { category:'Adaptation',indicator:'Total Adaptation Finance',region:'Global',year:2023,value:63,source:'CPI Global Landscape 2024'},
+  { category:'Adaptation',indicator:'Public Adaptation Finance',region:'Global',year:2023,value:39.8,source:'CPI Global Landscape 2024'},
+  { category:'Adaptation',indicator:'Private Adaptation Finance',region:'Global',year:2023,value:23.2,source:'CPI Global Landscape 2024'},
+  { category:'Adaptation',indicator:'Adaptation Finance',region:'Sub-Saharan Africa',year:2023,value:3.7,source:'CPI / OECD'},
+  { category:'Adaptation',indicator:'Adaptation Finance',region:'South Asia',year:2023,value:7.1,source:'CPI / OECD'},
+  { category:'Adaptation',indicator:'Adaptation Finance',region:'East Asia & Pacific',year:2023,value:18.4,source:'CPI / OECD'},
+  { category:'Adaptation',indicator:'Adaptation Finance',region:'Europe & Central Asia',year:2023,value:20.1,source:'CPI / OECD'},
+  { category:'Adaptation',indicator:'Water & Flood Management',region:'Global',year:2023,value:12.1,source:'CPI Sectoral Analysis'},
+  { category:'Adaptation',indicator:'Agriculture & Food Security',region:'Global',year:2023,value:9.8,source:'CPI Sectoral Analysis'},
+  { category:'Loss & Damage',indicator:'L&D Fund Total Pledges',region:'Global',year:2025,value:0.792,source:'UNFCCC / COP28'},
+  { category:'Loss & Damage',indicator:'L&D Fund Disbursed',region:'Global',year:2025,value:0.098,source:'UNFCCC Tracking'},
+  { category:'Loss & Damage',indicator:'Annual L&D Needs Estimate',region:'Global',year:2030,value:400,source:'UNEP / Markandya et al.'},
+  { category:'Loss & Damage',indicator:'Climate Disaster Economic Losses',region:'Global',year:2023,value:380,source:'Munich Re / Swiss Re'},
+  { category:'Finance Gap',indicator:'Adaptation Finance Gap',region:'Global',year:2024,value:252,source:'UNEP Adaptation Gap Report 2024'},
+  { category:'Finance Gap',indicator:'Adaptation Needs (Annual)',region:'Global',year:2030,value:315,source:'UNEP Adaptation Gap Report 2024'},
+  { category:'Finance Gap',indicator:'Gap: Sub-Saharan Africa',region:'SSA',year:2024,value:64.3,source:'CPI / UNEP calculation'},
+  { category:'Finance Gap',indicator:'Gap: South Asia',region:'South Asia',year:2024,value:77.9,source:'CPI / UNEP calculation'},
+  { category:'Finance Gap',indicator:'Gap: Small Island States',region:'SIDS',year:2024,value:16.8,source:'CPI / UNEP calculation'},
+];
+
+// ============================================================
+// CHART COLORS
+// ============================================================
+const COLORS = {
+  teal: '#22d3ee', green: '#34d399', amber: '#fbbf24', red: '#f87171',
+  blue: '#60a5fa', purple: '#a78bfa', pink: '#f472b6', orange: '#fb923c',
+};
+const PALETTE = [COLORS.teal, COLORS.blue, COLORS.purple, COLORS.green, COLORS.amber, COLORS.pink, COLORS.orange, COLORS.red];
+const REGION_COLORS = {
+  'Europe': '#60a5fa', 'Asia-Pacific': '#f59e0b', 'North America': '#22d3ee',
+  'Latin America': '#34d399', 'Africa': '#f87171', 'Middle East': '#a78bfa',
+};
+const ADAPT_REGION_COLORS = [
+  '#f87171', '#fb923c', '#fbbf24', '#34d399', '#22d3ee', '#60a5fa', '#a78bfa',
+];
+
+// ============================================================
+// GLOBAL CHART DEFAULTS
+// ============================================================
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif";
+Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15,23,42,0.95)';
+Chart.defaults.plugins.tooltip.borderColor = 'rgba(34,211,238,0.3)';
+Chart.defaults.plugins.tooltip.borderWidth = 1;
+Chart.defaults.plugins.tooltip.padding = 10;
+Chart.defaults.plugins.tooltip.titleFont = { size: 13, weight: '600' };
+Chart.defaults.plugins.tooltip.bodyFont = { size: 12 };
+
+// ============================================================
+// CHART CREATION HELPER
+// ============================================================
+const charts = {};
+function getChart(id) {
+  if (charts[id]) return charts[id];
+  const ctx = document.getElementById(id);
+  if (!ctx) return null;
+  charts[id] = new Chart(ctx, { type: 'line', data: { labels: [], datasets: [] }, options: {} });
+  return charts[id];
+}
+
+function destroyAllCharts() {
+  Object.values(charts).forEach(c => c.destroy());
+  Object.keys(charts).forEach(k => delete charts[k]);
+}
+
+// ============================================================
+// TAB 1: OVERVIEW CHARTS
+// ============================================================
+
+function renderSankeyOverview() {
+  const container = document.getElementById('sankeyOverview');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const width = container.clientWidth || 900;
+  const height = 380;
+  const margin = { top: 10, right: 10, bottom: 10, left: 10 };
+
+  const svg = d3.select('#sankeyOverview')
+    .append('svg')
+    .attr('viewBox', `0 0 ${width} ${height}`)
+    .attr('preserveAspectRatio', 'xMidYMid meet');
+
+  // Sankey data
+  const sankeyData = {
+    nodes: [
+      { name: 'Public Sources', group: 'source' },
+      { name: 'Private Sources', group: 'source' },
+      { name: 'MDBs & DFIs', group: 'intermediary' },
+      { name: 'Bilateral Aid', group: 'intermediary' },
+      { name: 'Green Bonds', group: 'intermediary' },
+      { name: 'Commercial Banks', group: 'intermediary' },
+      { name: 'Mitigation', group: 'destination' },
+      { name: 'Adaptation', group: 'destination' },
+      { name: 'Dual Objectives', group: 'destination' },
+    ],
+    links: [
+      { source: 0, target: 2, value: 320 },
+      { source: 0, target: 3, value: 180 },
+      { source: 1, target: 4, value: 350 },
+      { source: 1, target: 5, value: 270 },
+      { source: 2, target: 6, value: 210 },
+      { source: 2, target: 7, value: 65 },
+      { source: 2, target: 8, value: 45 },
+      { source: 3, target: 6, value: 60 },
+      { source: 3, target: 7, value: 80 },
+      { source: 3, target: 8, value: 40 },
+      { source: 4, target: 6, value: 280 },
+      { source: 4, target: 7, value: 38 },
+      { source: 4, target: 8, value: 32 },
+      { source: 5, target: 6, value: 535 },
+      { source: 5, target: 7, value: 15 },
+      { source: 5, target: 8, value: 20 },
+    ]
+  };
+
+  const sankeyGenerator = d3.sankey()
+    .nodeWidth(20)
+    .nodePadding(14)
+    .extent([[margin.left + 30, margin.top + 20], [width - margin.right - 30, height - margin.top - 20]]);
+
+  const { nodes, links } = sankeyGenerator({
+    nodes: sankeyData.nodes.map(d => ({ ...d })),
+    links: sankeyData.links.map(d => ({ ...d })),
+  });
+
+  const colorMap = {
+    'Public Sources': '#60a5fa', 'Private Sources': '#f59e0b',
+    'MDBs & DFIs': '#22d3ee', 'Bilateral Aid': '#34d399',
+    'Green Bonds': '#a78bfa', 'Commercial Banks': '#f472b6',
+    'Mitigation': '#f87171', 'Adaptation': '#34d399',
+    'Dual Objectives': '#fbbf24',
+  };
+
+  // Links
+  svg.append('g')
+    .selectAll('path')
+    .data(links)
+    .join('path')
+    .attr('d', d3.sankeyLinkHorizontal())
+    .attr('stroke', d => {
+      const sc = colorMap[nodes[d.source.index].name];
+      return sc ? sc + '55' : '#ffffff33';
+    })
+    .attr('stroke-width', d => Math.max(1, d.width))
+    .attr('fill', 'none')
+    .style('mix-blend-mode', 'screen');
+
+  // Link labels (on hover via title)
+  svg.append('g')
+    .selectAll('title')
+    .data(links)
+    .join('title')
+    .text(d => `${nodes[d.source.index].name} → ${nodes[d.target.index].name}: $${d.value}B`);
+
+  // Nodes
+  const nodeG = svg.append('g')
+    .selectAll('g')
+    .data(nodes)
+    .join('g');
+
+  nodeG.append('rect')
+    .attr('x', d => d.x0)
+    .attr('y', d => d.y0)
+    .attr('height', d => Math.max(1, d.y1 - d.y0))
+    .attr('width', d => d.x1 - d.x0)
+    .attr('fill', d => colorMap[d.name] || '#94a3b8')
+    .attr('rx', 3)
+    .attr('stroke', '#0a0e17')
+    .attr('stroke-width', 1);
+
+  // Labels
+  nodeG.append('text')
+    .attr('x', d => d.x0 < width / 2 ? d.x1 + 6 : d.x0 - 6)
+    .attr('y', d => (d.y0 + d.y1) / 2)
+    .attr('dy', '0.35em')
+    .attr('text-anchor', d => d.x0 < width / 2 ? 'start' : 'end')
+    .attr('fill', '#e2e8f0')
+    .attr('font-size', '11px')
+    .attr('font-weight', '500')
+    .text(d => d.name);
+
+  // Value labels
+  nodeG.append('text')
+    .attr('x', d => d.x0 < width / 2 ? d.x1 + 6 : d.x0 - 6)
+    .attr('y', d => (d.y0 + d.y1) / 2 + 14)
+    .attr('dy', '0.35em')
+    .attr('text-anchor', d => d.x0 < width / 2 ? 'start' : 'end')
+    .attr('fill', '#94a3b8')
+    .attr('font-size', '10px')
+    .text(d => `$${d.value || 0}B`);
+}
+
+function renderCompositionChart() {
+  const c = getChart('chartComposition');
+  c.destroy();
+  const ctx = document.getElementById('chartComposition').getContext('2d');
+  charts['chartComposition'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: compositionData.map(d => d.year),
+      datasets: [
+        { label: 'Mitigation', data: compositionData.map(d => d.mitigation), backgroundColor: '#f87171aa', borderColor: '#f87171', borderWidth: 1 },
+        { label: 'Adaptation', data: compositionData.map(d => d.adaptation), backgroundColor: '#34d399aa', borderColor: '#34d399', borderWidth: 1 },
+        { label: 'Dual Objectives', data: compositionData.map(d => d.dual), backgroundColor: '#fbbf24aa', borderColor: '#fbbf24', borderWidth: 1 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 16, font: { size: 11 } } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: $${ctx.parsed.y}B` } }
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { font: { size: 11 } } },
+        y: { stacked: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => '$' + v + 'B', font: { size: 11 } } }
+      },
+      animation: { duration: 1200, easing: 'easeOutQuart' },
+    }
+  });
+}
+
+function renderAdaptShareChart() {
+  const c = getChart('chartAdaptShare');
+  c.destroy();
+  const ctx = document.getElementById('chartAdaptShare').getContext('2d');
+  const shares = compositionData.map(d => (d.adaptation / (d.mitigation + d.adaptation + d.dual) * 100));
+  charts['chartAdaptShare'] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: compositionData.map(d => d.year),
+      datasets: [{
+        label: 'Adaptation % of Total',
+        data: shares,
+        borderColor: '#34d399',
+        backgroundColor: 'rgba(52,211,153,0.1)',
+        fill: true, tension: 0.4, borderWidth: 3, pointRadius: 5,
+        pointBackgroundColor: '#34d399', pointBorderColor: '#0a0e17', pointBorderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` Adaptation: ${ctx.parsed.y.toFixed(1)}% of total climate finance` } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => v.toFixed(1) + '%', font: { size: 11 } }, min: 2, max: 7 }
+      },
+      animation: { duration: 1500, easing: 'easeOutQuart' },
+    }
+  });
+}
+
+// ============================================================
+// TAB 2: GREEN BONDS
+// ============================================================
+function renderGreenBondsChart() {
+  const c = getChart('chartGreenBonds');
+  c.destroy();
+  const ctx = document.getElementById('chartGreenBonds').getContext('2d');
+  const datasets = gbRegions.map((r, i) => ({
+    label: r,
+    data: gbData[r],
+    backgroundColor: REGION_COLORS[r] + 'cc',
+    borderColor: REGION_COLORS[r],
+    borderWidth: 1,
+  }));
+  charts['chartGreenBonds'] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: gbYears, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 14, font: { size: 10 } } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: $${ctx.parsed.y}B` } }
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: { stacked: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => '$' + v + 'B', font: { size: 10 } }, title: { display: true, text: 'USD Billions', color: '#94a3b8' } }
+      },
+      animation: { duration: 1400, easing: 'easeOutQuart' },
+    }
+  });
+}
+
+function renderGBSectorsChart() {
+  const c = getChart('chartGBSectors');
+  c.destroy();
+  const ctx = document.getElementById('chartGBSectors').getContext('2d');
+  const labels = Object.keys(gbSectors);
+  const data = Object.values(gbSectors);
+  charts['chartGBSectors'] = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data, backgroundColor: PALETTE.map(c => c + 'dd'), borderColor: '#0a0e17', borderWidth: 2 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '55%',
+      plugins: {
+        legend: { position: 'right', labels: { usePointStyle: true, padding: 12, font: { size: 10 } } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: $${ctx.parsed}B (${((ctx.parsed / data.reduce((a,b)=>a+b,0))*100).toFixed(1)}%)` } }
+      },
+      animation: { animateRotate: true, duration: 1200 },
+    }
+  });
+}
+
+function renderGBCountriesChart() {
+  const c = getChart('chartGBCountries');
+  c.destroy();
+  const ctx = document.getElementById('chartGBCountries').getContext('2d');
+  const labels = Object.keys(gbCountries);
+  const data = Object.values(gbCountries);
+  charts['chartGBCountries'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: '2024 Issuance (USD B)',
+        data,
+        backgroundColor: data.map((_, i) => PALETTE[i % PALETTE.length] + 'cc'),
+        borderColor: data.map((_, i) => PALETTE[i % PALETTE.length]),
+        borderWidth: 1, borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` $${ctx.parsed.x}B` } }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => '$' + v + 'B', font: { size: 10 } } },
+        y: { grid: { display: false }, ticks: { font: { size: 10 } } }
+      },
+      animation: { duration: 1000 },
+    }
+  });
+}
+
+// ============================================================
+// TAB 3: ADAPTATION FINANCE
+// ============================================================
+function renderAdaptSectorsChart() {
+  const c = getChart('chartAdaptSectors');
+  c.destroy();
+  const ctx = document.getElementById('chartAdaptSectors').getContext('2d');
+  const labels = Object.keys(adaptSectors);
+  const data = Object.values(adaptSectors);
+  charts['chartAdaptSectors'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'USD Billions',
+        data,
+        backgroundColor: data.map((_, i) => PALETTE[i % PALETTE.length] + 'cc'),
+        borderColor: data.map((_, i) => PALETTE[i % PALETTE.length]),
+        borderWidth: 1, borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` $${ctx.parsed.y}B` } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 45 } },
+        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => '$' + v + 'B', font: { size: 10 } } }
+      },
+      animation: { duration: 1000 },
+    }
+  });
+}
+
+function renderAdaptInstrumentsChart() {
+  const c = getChart('chartAdaptInstruments');
+  c.destroy();
+  const ctx = document.getElementById('chartAdaptInstruments').getContext('2d');
+  const labels = Object.keys(adaptInstruments);
+  const data = Object.values(adaptInstruments);
+  charts['chartAdaptInstruments'] = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data, backgroundColor: PALETTE.map(c => c + 'dd'), borderColor: '#0a0e17', borderWidth: 2 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '55%',
+      plugins: {
+        legend: { position: 'right', labels: { usePointStyle: true, padding: 10, font: { size: 10 } } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: $${ctx.parsed}B` } }
+      },
+      animation: { animateRotate: true, duration: 1200 },
+    }
+  });
+}
+
+function renderAdaptRegionChart() {
+  const c = getChart('chartAdaptRegion');
+  c.destroy();
+  const ctx = document.getElementById('chartAdaptRegion').getContext('2d');
+  const datasets = adaptRegions.map((r, i) => ({
+    label: r,
+    data: adaptRegionData[r],
+    borderColor: ADAPT_REGION_COLORS[i],
+    backgroundColor: ADAPT_REGION_COLORS[i] + '22',
+    fill: false, tension: 0.4, borderWidth: 2.5, pointRadius: 4,
+  }));
+  charts['chartAdaptRegion'] = new Chart(ctx, {
+    type: 'line',
+    data: { labels: adaptYears, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 14, font: { size: 10 } } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: $${ctx.parsed.y}B` } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => '$' + v + 'B', font: { size: 10 } } }
+      },
+      animation: { duration: 1500 },
+    }
+  });
+}
+
+// ============================================================
+// TAB 4: LOSS & DAMAGE
+// ============================================================
+function renderLDGapChart() {
+  const c = getChart('chartLDGap');
+  c.destroy();
+  const ctx = document.getElementById('chartLDGap').getContext('2d');
+  charts['chartLDGap'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Pledged', 'Disbursed', 'Annual Needs (2030 est.)'],
+      datasets: [{
+        label: 'USD Billions',
+        data: [0.792, 0.098, 400],
+        backgroundColor: ['#60a5facc', '#34d399cc', '#f87171cc'],
+        borderColor: ['#60a5fa', '#34d399', '#f87171'],
+        borderWidth: 2, borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` $${ctx.parsed.y >= 1 ? ctx.parsed.y + 'B' : (ctx.parsed.y * 1000).toFixed(0) + 'M'}` } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 12, weight: '600' } } },
+        y: { type: 'logarithmic', grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: {
+            callback: function(v) {
+              if (v >= 1000) return '$' + (v/1000).toFixed(1) + 'T';
+              if (v >= 1) return '$' + v + 'B';
+              return '$' + (v*1000).toFixed(0) + 'M';
+            },
+            font: { size: 10 }
+          }
+        }
+      },
+      animation: { duration: 1500 },
+    }
+  });
+}
+
+function renderLDPledgesChart() {
+  const c = getChart('chartLDPledges');
+  c.destroy();
+  const ctx = document.getElementById('chartLDPledges').getContext('2d');
+  const labels = Object.keys(ldPledges);
+  const data = Object.values(ldPledges);
+  charts['chartLDPledges'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'USD Millions',
+        data,
+        backgroundColor: data.map((_, i) => PALETTE[i % PALETTE.length] + 'cc'),
+        borderColor: data.map((_, i) => PALETTE[i % PALETTE.length]),
+        borderWidth: 1, borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` $${ctx.parsed.x}M` } } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => '$' + v + 'M', font: { size: 10 } } },
+        y: { grid: { display: false }, ticks: { font: { size: 10 } } }
+      },
+      animation: { duration: 1000 },
+    }
+  });
+}
+
+function renderLDRegionalChart() {
+  const c = getChart('chartLDRegional');
+  c.destroy();
+  const ctx = document.getElementById('chartLDRegional').getContext('2d');
+  charts['chartLDRegional'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ldRegional.map(d => d.region),
+      datasets: [
+        { label: 'Climate Disaster Costs ($B)', data: ldRegional.map(d => d.cost), backgroundColor: '#f87171cc', borderColor: '#f87171', borderWidth: 1, borderRadius: 4, yAxisID: 'y' },
+        { label: 'L&D Funding Received ($B)', data: ldRegional.map(d => d.pledged), backgroundColor: '#34d399cc', borderColor: '#34d399', borderWidth: 1, borderRadius: 4, yAxisID: 'y1' },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 14, font: { size: 10 } } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: $${ctx.parsed.y}B` } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: { type: 'linear', position: 'left', grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => '$' + v + 'B', font: { size: 10 } }, title: { display: true, text: 'Disaster Costs ($B)', color: '#94a3b8' } },
+        y1: { type: 'linear', position: 'right', grid: { display: false }, ticks: { callback: v => '$' + v + 'B', font: { size: 10 } }, title: { display: true, text: 'L&D Funding ($B)', color: '#94a3b8' } },
+      },
+      animation: { duration: 1200 },
+    }
+  });
+}
+
+// ============================================================
+// TAB 5: FINANCE GAP
+// ============================================================
+function renderGapProjection() {
+  const c = getChart('chartGapProjection');
+  c.destroy();
+  const ctx = document.getElementById('chartGapProjection').getContext('2d');
+  charts['chartGapProjection'] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: gapProjections.map(d => d.year),
+      datasets: [
+        {
+          label: 'Estimated Annual Need',
+          data: gapProjections.map(d => d.need),
+          borderColor: '#f87171',
+          backgroundColor: 'rgba(248,113,113,0.08)',
+          fill: true, tension: 0.3, borderWidth: 3, borderDash: [6, 3],
+          pointRadius: 4, pointBackgroundColor: '#f87171',
+        },
+        {
+          label: 'Actual/Projected Flows',
+          data: gapProjections.map(d => d.actual),
+          borderColor: '#34d399',
+          backgroundColor: 'rgba(52,211,153,0.08)',
+          fill: true, tension: 0.3, borderWidth: 3,
+          pointRadius: 4, pointBackgroundColor: '#34d399',
+        },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 16, font: { size: 11 } } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: $${ctx.parsed.y}B` } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => '$' + v + 'B', font: { size: 10 } } }
+      },
+      animation: { duration: 1600 },
+    }
+  });
+}
+
+function renderGapRegionChart() {
+  const c = getChart('chartGapRegion');
+  c.destroy();
+  const ctx = document.getElementById('chartGapRegion').getContext('2d');
+  charts['chartGapRegion'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: gapRegionData.map(d => d.region),
+      datasets: [
+        { label: 'Estimated Need ($B)', data: gapRegionData.map(d => d.need), backgroundColor: '#f87171aa', borderColor: '#f87171', borderWidth: 1, borderRadius: 4 },
+        { label: 'Current Flows ($B)', data: gapRegionData.map(d => d.flow), backgroundColor: '#34d399aa', borderColor: '#34d399', borderWidth: 1, borderRadius: 4 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 14, font: { size: 10 } } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: $${ctx.parsed.y}B` } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => '$' + v + 'B', font: { size: 10 } } }
+      },
+      animation: { duration: 1200 },
+    }
+  });
+}
+
+function renderAdequacyChart() {
+  const c = getChart('chartAdequacy');
+  c.destroy();
+  const ctx = document.getElementById('chartAdequacy').getContext('2d');
+  const adequacy = gapRegionData.map(d => ((d.flow / d.need) * 100));
+  charts['chartAdequacy'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: gapRegionData.map(d => d.region),
+      datasets: [{
+        label: '% of Need Met',
+        data: adequacy,
+        backgroundColor: adequacy.map(v => v < 20 ? '#f87171cc' : v < 50 ? '#fbbf24cc' : '#34d399cc'),
+        borderColor: adequacy.map(v => v < 20 ? '#f87171' : v < 50 ? '#fbbf24' : '#34d399'),
+        borderWidth: 1, borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y.toFixed(1)}% of needs met` } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => v + '%', font: { size: 10 } }, max: 100, title: { display: true, text: '% of Adaptation Need Currently Funded', color: '#94a3b8' } }
+      },
+      animation: { duration: 1200 },
+    }
+  });
+}
+
+// ============================================================
+// TAB 6: DATA EXPLORER
+// ============================================================
+let explorerSort = { field: null, dir: 'asc' };
+
+function renderExplorerTable(filter = 'all') {
+  const tbody = document.getElementById('explorerBody');
+  let data = [...explorerData];
+  if (filter !== 'all') data = data.filter(d => d.category === filter);
+
+  if (explorerSort.field) {
+    data.sort((a, b) => {
+      const av = a[explorerSort.field], bv = b[explorerSort.field];
+      const cmp = typeof av === 'string' ? av.localeCompare(bv) : av - bv;
+      return explorerSort.dir === 'asc' ? cmp : -cmp;
+    });
+  }
+
+  tbody.innerHTML = data.map(d => `
+    <tr>
+      <td><span style="padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:${d.category==='Green Bonds'?'rgba(34,211,238,0.15)':d.category==='Adaptation'?'rgba(52,211,153,0.15)':d.category==='Loss & Damage'?'rgba(248,113,113,0.15)':'rgba(251,191,36,0.15)'};color:${d.category==='Green Bonds'?'#22d3ee':d.category==='Adaptation'?'#34d399':d.category==='Loss & Damage'?'#f87171':'#fbbf24'}">${d.category}</span></td>
+      <td>${d.indicator}</td>
+      <td>${d.region}</td>
+      <td>${d.year}</td>
+      <td>$${d.value.toLocaleString()}B</td>
+      <td>${d.source}</td>
+    </tr>
+  `).join('');
+  document.getElementById('rowCount').textContent = `Showing ${data.length} records`;
+}
+
+// ============================================================
+// RENDER ALL CHARTS FOR A TAB
+// ============================================================
+function renderTabCharts(tabId) {
+  // Destroy all existing charts
+  Object.values(charts).forEach(c => { try { c.destroy(); } catch(e) {} });
+  charts.length = 0;
+  for (const k in charts) delete charts[k];
+
+  // Small delay for DOM to be visible (needed for canvas sizing)
+  setTimeout(() => {
+    switch(tabId) {
+      case 'overview':
+        renderSankeyOverview();
+        renderCompositionChart();
+        renderAdaptShareChart();
+        break;
+      case 'green-bonds':
+        renderGreenBondsChart();
+        renderGBSectorsChart();
+        renderGBCountriesChart();
+        break;
+      case 'adaptation':
+        renderAdaptSectorsChart();
+        renderAdaptInstrumentsChart();
+        renderAdaptRegionChart();
+        break;
+      case 'loss-damage':
+        renderLDGapChart();
+        renderLDPledgesChart();
+        renderLDRegionalChart();
+        break;
+      case 'finance-gap':
+        renderGapProjection();
+        renderGapRegionChart();
+        renderAdequacyChart();
+        break;
+      case 'explorer':
+        renderExplorerTable();
+        break;
+    }
+  }, 150);
+}
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+
+    btn.classList.add('active');
+    const tabId = btn.dataset.tab;
+    const panel = document.getElementById('panel-' + tabId);
+    if (panel) panel.classList.add('active');
+
+    renderTabCharts(tabId);
+  });
+});
+
+// Explorer filter buttons
+document.getElementById('explorerFilters').addEventListener('click', (e) => {
+  if (e.target.classList.contains('filter-btn')) {
+    document.querySelectorAll('#explorerFilters .filter-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    renderExplorerTable(e.target.dataset.filter);
+  }
+});
+
+// Explorer table sorting
+document.getElementById('explorerTable').addEventListener('click', (e) => {
+  const th = e.target.closest('th');
+  if (!th || !th.dataset.sort) return;
+  const field = th.dataset.sort;
+  if (explorerSort.field === field) {
+    explorerSort.dir = explorerSort.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    explorerSort.field = field;
+    explorerSort.dir = 'asc';
+  }
+  const activeFilter = document.querySelector('#explorerFilters .filter-btn.active');
+  renderExplorerTable(activeFilter ? activeFilter.dataset.filter : 'all');
+});
+
+// ============================================================
+// INITIAL RENDER
+// ============================================================
+renderTabCharts('overview');
+
+// Handle window resize for Sankey
+let resizeTimeout;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(() => {
+    const activeTab = document.querySelector('.tab-btn.active');
+    if (activeTab) renderTabCharts(activeTab.dataset.tab);
+  }, 300);
+});
+
+// ============================================================
+// ANIMATED KPI COUNTERS (on overview tab)
+// ============================================================
+function animateKPIs() {
+  const targets = [
+    { el: document.getElementById('kpi-total'), target: 1.27, suffix: 'T', prefix: '$', decimals: 2 },
+    { el: document.getElementById('kpi-adapt'), target: 63, suffix: 'B', prefix: '$', decimals: 0 },
+    { el: document.getElementById('kpi-need'), target: 315, suffix: 'B', prefix: '$', decimals: 0 },
+    { el: document.getElementById('kpi-gap'), target: 252, suffix: 'B', prefix: '$', decimals: 0 },
+    { el: document.getElementById('kpi-ld'), target: 792, suffix: 'M', prefix: '$', decimals: 0 },
+  ];
+
+  targets.forEach(({ el, target, suffix, prefix, decimals }) => {
+    if (!el) return;
+    const startVal = 0;
+    const duration = 1800;
+    const start = performance.now();
+
+    function update(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // easeOutExpo
+      const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      const current = startVal + (target - startVal) * eased;
+      el.textContent = prefix + current.toFixed(decimals) + suffix;
+      if (progress < 1) requestAnimationFrame(update);
+    }
+
+    requestAnimationFrame(update);
+  });
+}
+
+// Animate on load
+setTimeout(animateKPIs, 400);
+
+console.log('🌐 Climate Adaptation Finance Flows Dashboard ready.');
+console.log('📊 Data sources: CPI, OECD, UNFCCC, Climate Bonds Initiative, UNEP');
+console.log('🔗 Deployed via GitHub Pages');
+</script>
+</body>
+</html>
