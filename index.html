@@ -34,7 +34,19 @@
   --shadow-card: 0 4px 24px rgba(0,0,0,0.3);
   --font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --icon-size-sm: 16px;
+  --icon-size-md: 20px;
+  --icon-size-lg: 24px;
 }
+
+/* === INLINE SVG ICONS === */
+.tab-icon-svg { width: var(--icon-size-sm); height: var(--icon-size-sm); vertical-align: middle; margin-right: 6px; flex-shrink: 0; }
+.tab-icon-svg path, .tab-icon-svg circle, .tab-icon-svg rect, .tab-icon-svg line, .tab-icon-svg polyline { stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.tab-btn.active .tab-icon-svg path, .tab-btn.active .tab-icon-svg circle, .tab-btn.active .tab-icon-svg rect, .tab-btn.active .tab-icon-svg line { stroke: var(--accent-teal); }
+.chart-icon-svg { width: var(--icon-size-sm); height: var(--icon-size-sm); vertical-align: middle; margin-right: 5px; flex-shrink: 0; }
+.chart-icon-svg path, .chart-icon-svg circle, .chart-icon-svg rect, .chart-icon-svg line, .chart-icon-svg polyline { stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.header-logo svg { width: 20px; height: 20px; }
+.header-logo svg path, .header-logo svg circle { stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { height: 100%; overflow: hidden; }
 body {
@@ -101,17 +113,14 @@ body {
 
 /* === MAIN CONTENT === */
 .main-content {
-  flex: 1; overflow-y: auto; overflow-x: hidden;
-  padding: 20px 24px;
-  scroll-behavior: smooth;
+  flex: 1; overflow: hidden;
+  padding: 10px 16px;
+  display: flex; flex-direction: column;
 }
-.main-content::-webkit-scrollbar { width: 6px; }
-.main-content::-webkit-scrollbar-track { background: transparent; }
-.main-content::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 3px; }
 
 /* === TAB PANELS === */
 .tab-panel { display: none; animation: fadeSlideIn 0.35s ease; }
-.tab-panel.active { display: block; }
+.tab-panel.active { display: flex; flex-direction: column; height: 100%; gap: 8px; }
 @keyframes fadeSlideIn {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
@@ -120,15 +129,15 @@ body {
 /* === KPI CARDS === */
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
-  margin-bottom: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  flex-shrink: 0;
 }
 .kpi-card {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 20px 22px;
+  padding: 12px 16px;
   transition: all 0.25s;
   position: relative; overflow: hidden;
 }
@@ -150,13 +159,13 @@ body {
 .kpi-card.accent-blue::before { background: var(--accent-blue); }
 .kpi-card.accent-purple::before { background: var(--accent-purple); }
 .kpi-label {
-  font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px;
-  color: var(--text-muted); margin-bottom: 6px; font-weight: 600;
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px;
+  color: var(--text-muted); margin-bottom: 4px; font-weight: 600;
 }
 .kpi-value {
-  font-size: 32px; font-weight: 800; letter-spacing: -1px;
+  font-size: 26px; font-weight: 800; letter-spacing: -1px;
   font-family: var(--font-mono);
-  margin-bottom: 4px; line-height: 1.1;
+  margin-bottom: 2px; line-height: 1.1;
 }
 .kpi-sub {
   font-size: 12px; color: var(--text-secondary);
@@ -169,36 +178,39 @@ body {
 /* === CHART ROWS === */
 .chart-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
-  gap: 16px;
-  margin-bottom: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
 }
 .chart-row.three-col { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
 .chart-panel {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 20px 22px;
+  padding: 12px 16px;
   transition: all 0.25s;
+  display: flex; flex-direction: column;
+  min-height: 0;
 }
 .chart-panel:hover { border-color: rgba(34,211,238,0.15); }
 .chart-panel.full-width { grid-column: 1 / -1; }
 .chart-panel-header {
   display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 8px; flex-shrink: 0;
 }
 .chart-panel-title {
-  font-size: 14px; font-weight: 600; color: var(--text-primary);
+  font-size: 12px; font-weight: 600; color: var(--text-primary);
 }
 .chart-panel-badge {
   font-size: 11px; padding: 3px 10px; border-radius: 12px;
   background: rgba(34,211,238,0.1); color: var(--accent-teal);
 }
-.chart-wrap { position: relative; width: 100%; }
-.chart-wrap canvas { width: 100% !important; }
+.chart-wrap { position: relative; width: 100%; flex: 1; min-height: 0; }
+.chart-wrap canvas { width: 100% !important; height: 100% !important; }
 
 /* === SANKEY CONTAINER === */
-.sankey-container { width: 100%; min-height: 420px; position: relative; }
+.sankey-container { width: 100%; flex: 1; min-height: 0; position: relative; }
 .sankey-container svg { width: 100%; height: 100%; }
 
 /* === DATA TABLE === */
@@ -206,10 +218,12 @@ body {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 20px 22px;
-  overflow-x: auto;
+  padding: 12px 16px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  flex: 1; min-height: 0;
 }
-.data-section h3 { font-size: 14px; font-weight: 600; margin-bottom: 14px; }
+.data-section h3 { font-size: 12px; font-weight: 600; margin-bottom: 8px; flex-shrink: 0; }
 .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .data-table thead th {
   text-align: left; padding: 10px 12px;
@@ -234,8 +248,8 @@ body {
 
 /* === FILTER CONTROLS === */
 .filter-bar {
-  display: flex; gap: 10px; flex-wrap: wrap;
-  margin-bottom: 16px; align-items: center;
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 8px; align-items: center; flex-shrink: 0;
 }
 .filter-btn {
   padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border-subtle);
@@ -269,23 +283,27 @@ body {
 .footer {
   background: var(--bg-panel);
   border-top: 1px solid var(--border-subtle);
-  padding: 10px 24px;
+  padding: 6px 16px;
   display: flex; justify-content: space-between; align-items: center;
-  font-size: 11px; color: var(--text-muted);
-  flex-shrink: 0; height: 40px;
+  font-size: 10px; color: var(--text-muted);
+  flex-shrink: 0; height: 32px;
 }
 
 /* === RESPONSIVE === */
 @media (max-width: 900px) {
   .kpi-grid { grid-template-columns: repeat(2, 1fr); }
   .chart-row { grid-template-columns: 1fr; }
-  .kpi-value { font-size: 24px; }
+  .kpi-value { font-size: 22px; }
   .tab-btn { padding: 0 12px; font-size: 11px; }
+  .main-content { overflow-y: auto; }
+  .tab-panel.active { height: auto; }
 }
 @media (max-width: 500px) {
   .kpi-grid { grid-template-columns: 1fr; }
-  .header { padding: 0 12px; }
-  .tabs-bar { padding: 0 8px; }
+  .header { padding: 0 10px; }
+  .tabs-bar { padding: 0 6px; }
+  .main-content { padding: 6px 8px; overflow-y: auto; }
+  .tab-panel.active { height: auto; }
 }
 </style>
 </head>
@@ -294,22 +312,22 @@ body {
 <!-- === HEADER === -->
 <header class="header">
   <div class="header-left">
-    <div class="header-logo">🌐</div>
+    <div class="header-logo"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="6" ry="10"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="8"/><line x1="12" y1="16" x2="12" y2="22"/></svg></div>
     <div class="header-title">Climate <span>Adaptation</span> Finance Flows</div>
   </div>
   <div class="header-right">
-    <div class="header-badge">📊 Data: CPI · OECD · UNFCCC · CBI · 2025</div>
+    <div class="header-badge"><svg class="tab-icon-svg" viewBox="0 0 16 16" style="stroke:#22d3ee;"><rect x="2" y="12" width="3" height="4" rx="0.5"/><rect x="6.5" y="7" width="3" height="9" rx="0.5"/><rect x="11" y="3" width="3" height="13" rx="0.5"/></svg>Data: CPI · OECD · UNFCCC · CBI · 2025</div>
   </div>
 </header>
 
 <!-- === TABS === -->
 <nav class="tabs-bar" id="tabsBar">
-  <button class="tab-btn active" data-tab="overview"><span class="tab-icon">📋</span>Overview</button>
-  <button class="tab-btn" data-tab="green-bonds"><span class="tab-icon">🌿</span>Green Bonds</button>
-  <button class="tab-btn" data-tab="adaptation"><span class="tab-icon">🏗️</span>Adaptation Finance</button>
-  <button class="tab-btn" data-tab="loss-damage"><span class="tab-icon">⚠️</span>Loss & Damage</button>
-  <button class="tab-btn" data-tab="finance-gap"><span class="tab-icon">📉</span>Finance Gap</button>
-  <button class="tab-btn" data-tab="explorer"><span class="tab-icon">🔍</span>Data Explorer</button>
+  <button class="tab-btn active" data-tab="overview"><svg class="tab-icon-svg" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2"/><line x1="1" y1="5" x2="15" y2="5"/><line x1="5" y1="5" x2="5" y2="15"/><rect x="7" y="7" width="3" height="7" rx="0.5"/><rect x="11" y="9" width="3" height="5" rx="0.5"/></svg>Overview</button>
+  <button class="tab-btn" data-tab="green-bonds"><svg class="tab-icon-svg" viewBox="0 0 16 16"><circle cx="8" cy="5" r="3"/><line x1="8" y1="8" x2="8" y2="14"/><line x1="4" y1="11" x2="12" y2="11"/><line x1="6" y1="14" x2="10" y2="14"/></svg>Green Bonds</button>
+  <button class="tab-btn" data-tab="adaptation"><svg class="tab-icon-svg" viewBox="0 0 16 16"><rect x="1" y="10" width="4" height="5" rx="0.5"/><rect x="6" y="6" width="4" height="9" rx="0.5"/><rect x="11" y="3" width="4" height="12" rx="0.5"/><line x1="3" y1="3" x2="3" y2="7"/><line x1="8" y1="1" x2="8" y2="4"/><line x1="13" y1="1" x2="13" y2="1.5"/></svg>Adaptation Finance</button>
+  <button class="tab-btn" data-tab="loss-damage"><svg class="tab-icon-svg" viewBox="0 0 16 16"><path d="M8 1 L15 15 L8 11 L1 15 Z"/><line x1="8" y1="5" x2="8" y2="9"/><circle cx="8" cy="11" r="0.8"/></svg>Loss & Damage</button>
+  <button class="tab-btn" data-tab="finance-gap"><svg class="tab-icon-svg" viewBox="0 0 16 16"><line x1="2" y1="14" x2="14" y2="2"/><polyline points="5,14 2,14 2,11"/><polyline points="11,2 14,2 14,5"/></svg>Finance Gap</button>
+  <button class="tab-btn" data-tab="explorer"><svg class="tab-icon-svg" viewBox="0 0 16 16"><circle cx="7" cy="7" r="5"/><line x1="11" y1="11" x2="15" y2="15"/></svg>Data Explorer</button>
 </nav>
 
 <!-- === MAIN CONTENT === -->
@@ -351,7 +369,7 @@ body {
   <div class="chart-row">
     <div class="chart-panel full-width">
       <div class="chart-panel-header">
-        <div class="chart-panel-title">🌊 Climate Finance Flow Sankey — From Source to Destination (2023, USD Billions)</div>
+        <div class="chart-panel-title"><svg class="chart-icon-svg" viewBox="0 0 16 16" style="stroke:#22d3ee;"><rect x="2" y="10" width="6" height="4" rx="1"/><rect x="10" y="10" width="6" height="4" rx="1"/><rect x="2" y="4" width="4" height="4" rx="1"/><rect x="8" y="4" width="8" height="4" rx="1"/><rect x="4" y="1" width="8" height="2" rx="1"/></svg>Climate Finance Flow Sankey — From Source to Destination (2023, USD Billions)</div>
         <div class="chart-panel-badge">Interactive</div>
       </div>
       <div class="sankey-container" id="sankeyOverview"></div>
@@ -362,13 +380,13 @@ body {
   <div class="chart-row">
     <div class="chart-panel">
       <div class="chart-panel-header">
-        <div class="chart-panel-title">📈 Climate Finance Composition Trend (2015–2023)</div>
+        <div class="chart-panel-title"><svg class="chart-icon-svg" viewBox="0 0 16 16" style="stroke:#34d399;"><polyline points="2,12 5,6 8,10 11,3 14,8"/><circle cx="2" cy="12" r="1.2"/><circle cx="5" cy="6" r="1.2"/><circle cx="8" cy="10" r="1.2"/><circle cx="11" cy="3" r="1.2"/><circle cx="14" cy="8" r="1.2"/></svg>Climate Finance Composition Trend (2015–2023)</div>
       </div>
       <div class="chart-wrap"><canvas id="chartComposition"></canvas></div>
     </div>
     <div class="chart-panel">
       <div class="chart-panel-header">
-        <div class="chart-panel-title">🎯 Adaptation Share of Total Climate Finance</div>
+        <div class="chart-panel-title"><svg class="chart-icon-svg" viewBox="0 0 16 16" style="stroke:#fbbf24;"><circle cx="8" cy="8" r="6"/><line x1="8" y1="2" x2="8" y2="5"/><line x1="8" y1="11" x2="8" y2="14"/><line x1="2" y1="8" x2="5" y2="8"/><line x1="11" y1="8" x2="14" y2="8"/></svg>Adaptation Share of Total Climate Finance</div>
       </div>
       <div class="chart-wrap"><canvas id="chartAdaptShare"></canvas></div>
     </div>
@@ -404,7 +422,7 @@ body {
   <div class="chart-row">
     <div class="chart-panel full-width">
       <div class="chart-panel-header">
-        <div class="chart-panel-title">📈 Annual Green Bond Issuance by Region (2015–2024, USD Billions)</div>
+        <div class="chart-panel-title"><svg class="chart-icon-svg" viewBox="0 0 16 16" style="stroke:#22d3ee;"><rect x="1" y="8" width="3" height="7" rx="0.5"/><rect x="5.5" y="4" width="3" height="11" rx="0.5"/><rect x="10" y="6" width="3" height="9" rx="0.5"/><line x1="14.5" y1="2" x2="14.5" y2="14"/><polyline points="12,5 14.5,2 17,5"/></svg>Annual Green Bond Issuance by Region (2015–2024, USD Billions)</div>
         <div class="chart-panel-badge">Stacked Bar</div>
       </div>
       <div class="chart-wrap"><canvas id="chartGreenBonds"></canvas></div>
@@ -414,13 +432,13 @@ body {
   <div class="chart-row">
     <div class="chart-panel">
       <div class="chart-panel-header">
-        <div class="chart-panel-title">🍩 Green Bond Use-of-Proceeds by Sector (2024)</div>
+        <div class="chart-panel-title"><svg class="chart-icon-svg" viewBox="0 0 16 16" style="stroke:#22d3ee;"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="2.5"/></svg>Green Bond Use-of-Proceeds by Sector (2024)</div>
       </div>
       <div class="chart-wrap"><canvas id="chartGBSectors"></canvas></div>
     </div>
     <div class="chart-panel">
       <div class="chart-panel-header">
-        <div class="chart-panel-title">🏦 Top 10 Green Bond Issuing Countries (2024)</div>
+        <div class="chart-panel-title"><svg class="chart-icon-svg" viewBox="0 0 16 16" style="stroke:#60a5fa;"><rect x="1" y="2" width="14" height="12" rx="1.5"/><line x1="1" y1="6" x2="15" y2="6"/><line x1="8" y1="6" x2="8" y2="14"/></svg>Top 10 Green Bond Issuing Countries (2024)</div>
       </div>
       <div class="chart-wrap"><canvas id="chartGBCountries"></canvas></div>
     </div>
@@ -456,13 +474,13 @@ body {
   <div class="chart-row">
     <div class="chart-panel">
       <div class="chart-panel-header">
-        <div class="chart-panel-title">🏗️ Adaptation Finance by Sector (2023, USD Billions)</div>
+        <div class="chart-panel-title"><svg class="chart-icon-svg" viewBox="0 0 16 16" style="stroke:#34d399;"><rect x="1" y="10" width="4" height="5" rx="0.5"/><rect x="6" y="5" width="4" height="10" rx="0.5"/><rect x="11" y="2" width="4" height="13" rx="0.5"/></svg>Adaptation Finance by Sector (2023, USD Billions)</div>
       </div>
       <div class="chart-wrap"><canvas id="chartAdaptSectors"></canvas></div>
     </div>
     <div class="chart-panel">
       <div class="chart-panel-header">
-        <div class="chart-panel-title">🏛️ Adaptation Finance by Instrument Type</div>
+        <div class="chart-panel-title"><svg class="chart-icon-svg" viewBox="0 0 16 16" style="stroke:#a78bfa;"><rect x="1" y="3" width="14" height="10" rx="2"/><line x1="1" y1="8" x2="15" y2="8"/><line x1="6" y1="3" x2="6" y2="13"/><line x1="11" y1="3" x2="11" y2="13"/></svg>Adaptation Finance by Instrument Type</div>
       </div>
       <div class="chart-wrap"><canvas id="chartAdaptInstruments"></canvas></div>
     </div>
@@ -471,7 +489,7 @@ body {
   <div class="chart-row">
     <div class="chart-panel full-width">
       <div class="chart-panel-header">
-        <div class="chart-panel-title">🌍 Adaptation Finance Flows by Recipient Region (2018–2023, USD Billions)</div>
+        <div class="chart-panel-title"><svg class="chart-icon-svg" viewBox="0 0 16 16" style="stroke:#34d399;"><circle cx="8" cy="8" r="7"/><ellipse cx="8" cy="8" rx="4" ry="7"/><line x1="1" y1="8" x2="15" y2="8"/></svg>Adaptation Finance Flows by Recipient Region (2018–2023, USD Billions)</div>
       </div>
       <div class="chart-wrap"><canvas id="chartAdaptRegion"></canvas></div>
     </div>
@@ -507,7 +525,7 @@ body {
   <div class="chart-row">
     <div class="chart-panel full-width">
       <div class="chart-panel-header">
-        <div class="chart-panel-title">⚠️ Loss & Damage — Pledges vs. Disbursements vs. Estimated Need</div>
+        <div class="chart-panel-title"><svg class="chart-icon-svg" viewBox="0 0 16 16" style="stroke:#f87171;"><path d="M8 1 L15 15 L8 11 L1 15 Z"/><line x1="8" y1="5" x2="8" y2="9"/><circle cx="8" cy="11" r="0.8"/></svg>Loss & Damage — Pledges vs. Disbursements vs. Estimated Need</div>
         <div class="chart-panel-badge">Gap Analysis</div>
       </div>
       <div class="chart-wrap"><canvas id="chartLDGap"></canvas></div>
@@ -517,13 +535,13 @@ body {
   <div class="chart-row">
     <div class="chart-panel">
       <div class="chart-panel-header">
-        <div class="chart-panel-title">🏴 Loss & Damage Fund Pledges by Country (USD Millions)</div>
+        <div class="chart-panel-title"><svg class="chart-icon-svg" viewBox="0 0 16 16" style="stroke:#fb923c;"><rect x="1" y="2" width="3" height="12" rx="0.5"/><rect x="6.5" y="5" width="3" height="9" rx="0.5"/><rect x="12" y="8" width="3" height="6" rx="0.5"/></svg>Loss & Damage Fund Pledges by Country (USD Millions)</div>
       </div>
       <div class="chart-wrap"><canvas id="chartLDPledges"></canvas></div>
     </div>
     <div class="chart-panel">
       <div class="chart-panel-header">
-        <div class="chart-panel-title">🌪️ Climate Disaster Costs vs. L&D Funding by Region (2023)</div>
+        <div class="chart-panel-title"><svg class="chart-icon-svg" viewBox="0 0 16 16" style="stroke:#f87171;"><path d="M3 4 Q5 1 8 4 Q11 7 13 4"/><line x1="3" y1="4" x2="3" y2="13"/><line x1="8" y1="4" x2="8" y2="14"/><line x1="13" y1="4" x2="13" y2="11"/></svg>Climate Disaster Costs vs. L&D Funding by Region (2023)</div>
       </div>
       <div class="chart-wrap"><canvas id="chartLDRegional"></canvas></div>
     </div>
@@ -559,7 +577,7 @@ body {
   <div class="chart-row">
     <div class="chart-panel full-width">
       <div class="chart-panel-header">
-        <div class="chart-panel-title">📉 The Adaptation Finance Gap — Needs vs. Actual Flows (2020–2050 Projected)</div>
+        <div class="chart-panel-title"><svg class="chart-icon-svg" viewBox="0 0 16 16" style="stroke:#f87171;"><line x1="2" y1="14" x2="14" y2="2"/><polyline points="5,14 2,14 2,11"/><polyline points="11,2 14,2 14,5"/></svg>The Adaptation Finance Gap — Needs vs. Actual Flows (2020–2050 Projected)</div>
       </div>
       <div class="chart-wrap"><canvas id="chartGapProjection"></canvas></div>
     </div>
@@ -568,13 +586,13 @@ body {
   <div class="chart-row">
     <div class="chart-panel">
       <div class="chart-panel-header">
-        <div class="chart-panel-title">🌍 Adaptation Finance Gap by Region (Needs vs. Flows)</div>
+        <div class="chart-panel-title"><svg class="chart-icon-svg" viewBox="0 0 16 16" style="stroke:#f87171;"><circle cx="8" cy="8" r="7"/><ellipse cx="8" cy="8" rx="4" ry="7"/><line x1="1" y1="8" x2="15" y2="8"/></svg>Adaptation Finance Gap by Region (Needs vs. Flows)</div>
       </div>
       <div class="chart-wrap"><canvas id="chartGapRegion"></canvas></div>
     </div>
     <div class="chart-panel">
       <div class="chart-panel-header">
-        <div class="chart-panel-title">🎯 Funding Adequacy Ratio by Region (% of needs met)</div>
+        <div class="chart-panel-title"><svg class="chart-icon-svg" viewBox="0 0 16 16" style="stroke:#fbbf24;"><circle cx="8" cy="8" r="6"/><line x1="8" y1="2" x2="8" y2="5"/><line x1="8" y1="11" x2="8" y2="14"/><line x1="2" y1="8" x2="5" y2="8"/><line x1="11" y1="8" x2="14" y2="8"/></svg>Funding Adequacy Ratio by Region (% of needs met)</div>
       </div>
       <div class="chart-wrap"><canvas id="chartAdequacy"></canvas></div>
     </div>
@@ -584,7 +602,7 @@ body {
 <!-- ========== TAB 6: DATA EXPLORER ========== -->
 <section class="tab-panel" id="panel-explorer">
   <div class="data-section">
-    <h3>📊 Climate Adaptation Finance — Full Dataset Explorer</h3>
+    <h3><svg class="chart-icon-svg" viewBox="0 0 16 16" style="stroke:#22d3ee;vertical-align:middle;margin-right:5px;"><rect x="2" y="12" width="3" height="4" rx="0.5"/><rect x="6.5" y="7" width="3" height="9" rx="0.5"/><rect x="11" y="3" width="3" height="13" rx="0.5"/></svg>Climate Adaptation Finance — Full Dataset Explorer</h3>
     <div class="filter-bar" id="explorerFilters">
       <button class="filter-btn active" data-filter="all">All Data</button>
       <button class="filter-btn" data-filter="Green Bonds">Green Bonds</button>
@@ -592,7 +610,7 @@ body {
       <button class="filter-btn" data-filter="Loss & Damage">Loss & Damage</button>
       <button class="filter-btn" data-filter="Finance Gap">Finance Gap</button>
     </div>
-    <div style="overflow-x:auto;">
+    <div class="table-scroll" style="overflow:auto;flex:1;min-height:0;">
       <table class="data-table" id="explorerTable">
         <thead>
           <tr>
@@ -607,7 +625,7 @@ body {
         <tbody id="explorerBody"></tbody>
       </table>
     </div>
-    <div style="margin-top:12px;font-size:12px;color:var(--text-muted);" id="rowCount"></div>
+    <div style="font-size:11px;color:var(--text-muted);flex-shrink:0;padding-top:6px;" id="rowCount"></div>
   </div>
 </section>
 
@@ -790,12 +808,12 @@ Chart.defaults.plugins.tooltip.bodyFont = { size: 12 };
 // ============================================================
 // CHART CREATION HELPER
 // ============================================================
-const charts = {};
-function getChart(id) {
+  const charts = {};
+  function getChart(id) {
   if (charts[id]) return charts[id];
   const ctx = document.getElementById(id);
   if (!ctx) return null;
-  charts[id] = new Chart(ctx, { type: 'line', data: { labels: [], datasets: [] }, options: {} });
+  charts[id] = new Chart(ctx, { type: 'line', data: { labels: [], datasets: [] }, options: { responsive: true, maintainAspectRatio: false } });
   return charts[id];
 }
 
@@ -1406,44 +1424,49 @@ function renderExplorerTable(filter = 'all') {
 // RENDER ALL CHARTS FOR A TAB
 // ============================================================
 function renderTabCharts(tabId) {
-  // Destroy all existing charts
+  // Destroy all existing Chart.js instances
   Object.values(charts).forEach(c => { try { c.destroy(); } catch(e) {} });
-  charts.length = 0;
-  for (const k in charts) delete charts[k];
+  for (const k of Object.keys(charts)) delete charts[k];
 
-  // Small delay for DOM to be visible (needed for canvas sizing)
-  setTimeout(() => {
-    switch(tabId) {
-      case 'overview':
-        renderSankeyOverview();
-        renderCompositionChart();
-        renderAdaptShareChart();
-        break;
-      case 'green-bonds':
-        renderGreenBondsChart();
-        renderGBSectorsChart();
-        renderGBCountriesChart();
-        break;
-      case 'adaptation':
-        renderAdaptSectorsChart();
-        renderAdaptInstrumentsChart();
-        renderAdaptRegionChart();
-        break;
-      case 'loss-damage':
-        renderLDGapChart();
-        renderLDPledgesChart();
-        renderLDRegionalChart();
-        break;
-      case 'finance-gap':
-        renderGapProjection();
-        renderGapRegionChart();
-        renderAdequacyChart();
-        break;
-      case 'explorer':
-        renderExplorerTable();
-        break;
-    }
-  }, 150);
+  // Also clear any lingering D3 SVG in the Sankey container
+  const sankeyEl = document.getElementById('sankeyOverview');
+  if (sankeyEl && tabId !== 'overview') sankeyEl.innerHTML = '';
+
+  // Render for the active tab — use requestAnimationFrame so layout has settled
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      switch(tabId) {
+        case 'overview':
+          renderSankeyOverview();
+          renderCompositionChart();
+          renderAdaptShareChart();
+          break;
+        case 'green-bonds':
+          renderGreenBondsChart();
+          renderGBSectorsChart();
+          renderGBCountriesChart();
+          break;
+        case 'adaptation':
+          renderAdaptSectorsChart();
+          renderAdaptInstrumentsChart();
+          renderAdaptRegionChart();
+          break;
+        case 'loss-damage':
+          renderLDGapChart();
+          renderLDPledgesChart();
+          renderLDRegionalChart();
+          break;
+        case 'finance-gap':
+          renderGapProjection();
+          renderGapRegionChart();
+          renderAdequacyChart();
+          break;
+        case 'explorer':
+          renderExplorerTable();
+          break;
+      }
+    });
+  });
 }
 
 // ============================================================
@@ -1537,9 +1560,9 @@ function animateKPIs() {
 // Animate on load
 setTimeout(animateKPIs, 400);
 
-console.log('🌐 Climate Adaptation Finance Flows Dashboard ready.');
-console.log('📊 Data sources: CPI, OECD, UNFCCC, Climate Bonds Initiative, UNEP');
-console.log('🔗 Deployed via GitHub Pages');
+console.log('[Climate Adaptation Finance Flows Dashboard] ready.');
+console.log('[Data] Sources: CPI, OECD, UNFCCC, Climate Bonds Initiative, UNEP');
+console.log('[Deploy] GitHub Pages');
 </script>
 </body>
 </html>
