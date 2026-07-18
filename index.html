@@ -6,6 +6,7 @@
 <title>Climate Adaptation Finance Flows Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
 <script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
 <style>
 :root {
   --bg-deep: #0a0e17;
@@ -1437,32 +1438,32 @@ function renderTabCharts(tabId) {
     requestAnimationFrame(() => {
       switch(tabId) {
         case 'overview':
-          renderSankeyOverview();
-          renderCompositionChart();
-          renderAdaptShareChart();
+          try { renderSankeyOverview(); } catch(e) { console.error('Sankey render failed:', e); }
+          try { renderCompositionChart(); } catch(e) { console.error('Composition chart failed:', e); }
+          try { renderAdaptShareChart(); } catch(e) { console.error('AdaptShare chart failed:', e); }
           break;
         case 'green-bonds':
-          renderGreenBondsChart();
-          renderGBSectorsChart();
-          renderGBCountriesChart();
+          try { renderGreenBondsChart(); } catch(e) { console.error(e); }
+          try { renderGBSectorsChart(); } catch(e) { console.error(e); }
+          try { renderGBCountriesChart(); } catch(e) { console.error(e); }
           break;
         case 'adaptation':
-          renderAdaptSectorsChart();
-          renderAdaptInstrumentsChart();
-          renderAdaptRegionChart();
+          try { renderAdaptSectorsChart(); } catch(e) { console.error(e); }
+          try { renderAdaptInstrumentsChart(); } catch(e) { console.error(e); }
+          try { renderAdaptRegionChart(); } catch(e) { console.error(e); }
           break;
         case 'loss-damage':
-          renderLDGapChart();
-          renderLDPledgesChart();
-          renderLDRegionalChart();
+          try { renderLDGapChart(); } catch(e) { console.error(e); }
+          try { renderLDPledgesChart(); } catch(e) { console.error(e); }
+          try { renderLDRegionalChart(); } catch(e) { console.error(e); }
           break;
         case 'finance-gap':
-          renderGapProjection();
-          renderGapRegionChart();
-          renderAdequacyChart();
+          try { renderGapProjection(); } catch(e) { console.error(e); }
+          try { renderGapRegionChart(); } catch(e) { console.error(e); }
+          try { renderAdequacyChart(); } catch(e) { console.error(e); }
           break;
         case 'explorer':
-          renderExplorerTable();
+          try { renderExplorerTable(); } catch(e) { console.error(e); }
           break;
       }
     });
